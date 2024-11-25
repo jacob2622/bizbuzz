@@ -1,0 +1,177 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <ctime>
+#include <cstdlib>
+#include <conio.h>
+#include <windows.h>
+#include <map>
+
+using namespace std;
+
+const int TOTAL_ACHIEVEMENTS = 106;
+enum Color { LIGHT_MODE, DARK_MODE };
+
+struct Achievement {
+    string name;
+    string description;
+    bool achieved;
+};
+
+class Business {
+public:
+    string name;
+    string type;
+    string location;
+    double capital;
+    Business(string n, string t, string l, double c) : name(n), type(t), location(l), capital(c) {}
+};
+
+class Project {
+public:
+    string name;
+    double cost;
+    double revenue;
+    int duration;
+    Project(string n, double c, double r, int d) : name(n), cost(c), revenue(r), duration(d) {}
+};
+
+class Game {
+private:
+    Business* business;
+    vector<Project> projects;
+    vector<Achievement> achievements;
+    Color mode;
+    double totalRevenue;
+    map<string, double> backgrounds; // Store background options
+
+    void setupAchievements() {
+        for (int i = 0; i < TOTAL_ACHIEVEMENTS; ++i) {
+            achievements.push_back({"Achievement " + to_string(i + 1), "Description " + to_string(i + 1), false});
+        }
+    }
+
+    void displayStatus() {
+        system("cls");
+        if (mode == LIGHT_MODE) {
+            system("color F0"); // Set light mode colors
+        } else {
+            system("color 07"); // Set dark mode colors
+        }
+        cout << "Business: " << business->name << " (" << business->type << ")" << endl;
+        cout << "Location: " << business->location << endl;
+        cout << "Capital: $" << business->capital << endl;
+        cout << "Total Revenue: $" << totalRevenue << endl;
+        cout << "Ongoing Projects:" << endl;
+        for (auto& project : projects) {
+            cout << "- " << project.name << " (Cost: $" << project.cost << ", Revenue: $" << project.revenue << ", Duration: " << project.duration << " days)" << endl;
+        }
+        displayAchievements();
+    }
+
+    void displayAchievements() {
+        cout << "\nAchievements:" << endl;
+        for (auto& achievement : achievements) {
+            cout << "- " << achievement.name << " (" << (achievement.achieved ? "Achieved" : "Not Achieved") << ")" << endl;
+        }
+    }
+
+    void setupBackgrounds() {
+        backgrounds["Solid Color - Red"] = 0;
+        backgrounds["Solid Color - Blue"] = 0;
+        backgrounds["Solid Color - Green"] = 0;
+        backgrounds["Animated - Space"] = 10000000000000;
+        backgrounds["Animated - Forest"] = 5000000000000;
+        // Add more backgrounds as needed
+    }
+
+    void displayBackgrounds() {
+        cout << "\nBackgrounds:" << endl;
+        for (const auto& bg : backgrounds) {
+            cout << "- " << bg.first << " (Cost: $" << bg.second << ")" << endl;
+        }
+    }
+
+    void changeBackground() {
+        displayBackgrounds();
+        cout << "Enter the name of the background you want to buy: ";
+        string bgName;
+        getline(cin, bgName);
+        if (backgrounds.find(bgName) != backgrounds.end() && business->capital >= backgrounds[bgName]) {
+            business->capital -= backgrounds[bgName];
+            cout << "Background changed to: " << bgName << endl;
+        } else {
+            cout << "Invalid background or insufficient funds." << endl;
+        }
+    }
+
+public:
+    Game() : business(nullptr), mode(LIGHT_MODE), totalRevenue(0) {
+        setupAchievements();
+        setupBackgrounds();
+    }
+
+    ~Game() {
+        delete business;
+    }
+
+    void start() {
+        srand(time(0));
+        cout << "Welcome to BizBuzz: The Ultimate Business Simulation" << endl;
+        string name, type;
+        double initialCapital = 100000.0;
+        cout << "Enter your business name: ";
+        getline(cin, name);
+        cout << "Enter your business type: ";
+        getline(cin, type);
+        vector<string> locations = {"Sydney, Australia", "Tokyo, Japan", "New York, USA", "Berlin, Germany", "Paris, France"};
+        string location = locations[rand() % locations.size()];
+
+        business = new Business(name, type, location, initialCapital);
+
+        projects.push_back(Project("Harbour View Apartments Renovation", 20000, 30000, 10));
+
+        while (true) {
+            displayStatus();
+            cout << "Enter command (status/new project/exit/light/dark/change background): ";
+            string command;
+            getline(cin, command);
+            if (command == "exit") break;
+            if (command == "status") {
+                displayStatus();
+            } else if (command == "new project") {
+                string pname;
+                double pcost, prevenue;
+                int pduration;
+                cout << "Enter project name: ";
+                getline(cin, pname);
+                cout << "Enter project cost: ";
+                cin >> pcost;
+                cout << "Enter project revenue: ";
+                cin >> prevenue;
+                cout << "Enter project duration (days): ";
+                cin >> pduration;
+                cin.ignore();
+
+                projects.push_back(Project(pname, pcost, prevenue, pduration));
+                business->capital -= pcost;
+                totalRevenue += prevenue;
+            } else if (command == "light") {
+                mode = LIGHT_MODE;
+            } else if (command == "dark") {
+                mode = DARK_MODE;
+            } else if (command == "change background") {
+                changeBackground();
+            } else {
+                cout << "Unknown command. Try 'status' or 'new project' or 'exit'." << endl;
+            }
+        }
+    }
+};
+
+int main() {
+    Game game;
+    game.start();
+    return 0;
+}
